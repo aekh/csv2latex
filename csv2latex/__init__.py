@@ -2,7 +2,7 @@ import sys
 import getopt
 import csv
 
-from . import help
+from . import help, table
 
 
 def main():
@@ -13,7 +13,9 @@ def main():
     quotechar = '\"'
     columns = []
     rows = []
-    transpose = False
+    transpose_before = False
+    transpose_after = False
+    transpose_individual = False
 
     short_names = "h" \
                  "t" \
@@ -27,7 +29,9 @@ def main():
     long_names = [
         "help",
         "more-help",
-        "transpose"
+        "transpose",
+        "transpose-after",
+        "transpose-individual",
         "infile=",
         "outfile=",
         "rows=",
@@ -40,8 +44,6 @@ def main():
         print(str(err))
         help.help(0)
         sys.exit(2)
-    print(opts)
-    print(args)
 
     for opt, arg in opts:
         if opt == '-h':
@@ -59,13 +61,23 @@ def main():
         elif opt in ("-q", "--quotechar"):
             quotechar = arg
         elif opt in ("-r", "--rows"):
-            rows = arg.split(",")
+            try:
+                rows  = [0] + list(map(int,arg.split(",")))
+            except ValueError:
+                print("option -r <rows> takes numbers separated by commas")
         elif opt in ("-c", "--columns"):
-            columns = arg.split(",")
+            try:
+                columns = [0] + list(map(int, arg.split(",")))
+            except ValueError:
+                print("option -c <columns> takes numbers separated by commas")
         elif opt in ("-t", "--transpose"):
-            transpose = True
-    print('Rows: ', rows)
-    print('Cols: ', columns)
+            transpose_before = True
+        elif opt in ("--transpose-after"):
+            if transpose_individual == False:
+                transpose_after = True
+        elif opt in ("--transpose-individual"):
+            transpose_individual = True
+            transpose_after = False
 
     if len(opts) == 0 or inputfile == '' or outputfile == '':
         help.help(0)
@@ -73,22 +85,73 @@ def main():
 
     with open(inputfile, 'r') as csvfile:
         csvdata = csv.reader(csvfile, delimiter=delimiter, quotechar=quotechar)
-        table = list(csvdata)
-        if transpose:
-            table = map(list, zip(*table))
+        matrix = list(csvdata)
+        if transpose_before:
+            matrix = map(list, zip(*matrix))
 
-        for row in table:
-            print(' & '.join(row), end="")
-            print(" \\\\")
+    Tables = []
 
-    #outfiles = [outputfile + "-r" str(r) + "-c" + str(r) for r, _ in enumerate(rows)]
+    if len(rows) > 1:
+        for row in range(len(rows)):
+            srow = rows[row]
+            if row + 1 == len(rows):
+                erow = None
+            else:
+                erow = rows[row + 1]
+            if len(columns) > 1:
+                for col in range(len(columns)):
+                    scol = columns[col]
+                    if col + 1 == len(columns):
+                        ecol = None
+                    else:
+                        ecol = columns[col + 1]
+                    Tables.append(
+                        table.Table(
+                            slicer(matrix, srow=srow, erow=erow, scol=scol, ecol=ecol),
+                            row + 1,
+                            col + 1,
+                            transpose_after
+                        )
+                    )
+            else: # len(columns) = 1
+                Tables.append(
+                    table.Table(
+                        slicer(matrix, srow=srow, erow=erow),
+                        row + 1,
+                        None,
+                        transpose_after
+                    )
+                )
+    else: # len(row) = 1
+        if len(columns) > 1:
+            for col in range(len(columns)):
+                scol = columns[col]
+                if col + 1 == len(columns):
+                    ecol = None
+                else:
+                    ecol = columns[col + 1]
+                Tables.append(
+                    table.Table(
+                        slicer(matrix, scol=scol, ecol=ecol),
+                        None,
+                        col + 1,
+                        transpose_after
+                    )
+                )
+        else: # len(columns) = 1
+            Tables = [table.Table(matrix, None, None, transpose_after)]
 
-    #for r in rows:
-    #    for c in columns:
+    for tab in Tables:
+        tab.write(outputfile)
 
 
-    #except:
-    #    print("No such file or directory: " + inputfile)
+def slicer(matrix, srow=0, erow=None, scol=0, ecol=None):
+    if erow == None:
+        erow = len(matrix)
+    if ecol == None and len(matrix) > 0:
+        ecol = len(matrix[1])
+    return [row[scol:ecol] for row in matrix[srow:erow]]
+
 
 if __name__ == "__main__":
     main()
