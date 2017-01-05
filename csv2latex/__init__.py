@@ -19,6 +19,7 @@ def main():
 
     short_names = "h" \
                  "t" \
+                 "p" \
                  "i:" \
                  "o:" \
                  "d:" \
@@ -34,6 +35,7 @@ def main():
         "transpose-individual",
         "infile=",
         "outfile=",
+        "print",
         "rows=",
         "columns="
     ]
