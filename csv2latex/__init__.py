@@ -1,6 +1,8 @@
+from __future__ import print_function
 import sys
 import getopt
 import csv
+import os
 
 from . import help, table
 
@@ -17,6 +19,7 @@ def main():
     transpose_before = False
     transpose_after = False
     transpose_individual = False
+    print_mode = False
 
     short_names = "h" \
                  "t" \
@@ -33,7 +36,7 @@ def main():
         "more-help",
         "transpose",
         "transpose-after",
-        "transpose-individual",
+        #"transpose-individual",
         "infile=",
         "outfile=",
         "print",
@@ -56,8 +59,8 @@ def main():
         if opt == '--more-help':
             help.help(2)
             sys.exit()
-        elif opt in ('--version'):
-            print("Current version of csv2latex is " + VERSION);
+        elif opt == '--version':
+            print("Current version of csv2latex is " + VERSION)
             sys.exit()
         elif opt in ("-i", "--infile"):
             inputfile = arg
@@ -69,7 +72,7 @@ def main():
             quotechar = arg
         elif opt in ("-r", "--rows"):
             try:
-                rows  = [0] + list(map(int,arg.split(",")))
+                rows = [0] + list(map(int,arg.split(",")))
             except ValueError:
                 print("option -r <rows> takes numbers separated by commas")
         elif opt in ("-c", "--columns"):
@@ -79,14 +82,16 @@ def main():
                 print("option -c <columns> takes numbers separated by commas")
         elif opt in ("-t", "--transpose"):
             transpose_before = True
-        elif opt in ("--transpose-after"):
-            if transpose_individual == False:
+        elif opt == "--transpose-after":
+            if not transpose_individual:
                 transpose_after = True
-        elif opt in ("--transpose-individual"):
-            transpose_individual = True
-            transpose_after = False
+        #elif opt in ("--transpose-individual"):
+        #    transpose_individual = True
+        #    transpose_after = False
+        elif opt in ('-p', '--print'):
+            print_mode = True
 
-    if len(opts) == 0 or inputfile == '' or outputfile == '':
+    if len(opts) == 0 or inputfile == '' or (outputfile == '' and not print_mode):
         help.help(0)
         sys.exit(2)
 
@@ -96,7 +101,7 @@ def main():
         if transpose_before:
             matrix = list(map(list, zip(*matrix)))
 
-    Tables = []
+    tables = []
 
     if len(rows) > 1:
         for row in range(len(rows)):
@@ -112,7 +117,7 @@ def main():
                         ecol = None
                     else:
                         ecol = columns[col + 1]
-                    Tables.append(
+                    tables.append(
                         table.Table(
                             slicer(matrix, srow=srow, erow=erow, scol=scol, ecol=ecol),
                             row + 1,
@@ -121,7 +126,7 @@ def main():
                         )
                     )
             else: # len(columns) = 1
-                Tables.append(
+                tables.append(
                     table.Table(
                         slicer(matrix, srow=srow, erow=erow),
                         row + 1,
@@ -137,7 +142,7 @@ def main():
                     ecol = None
                 else:
                     ecol = columns[col + 1]
-                Tables.append(
+                tables.append(
                     table.Table(
                         slicer(matrix, scol=scol, ecol=ecol),
                         None,
@@ -146,16 +151,44 @@ def main():
                     )
                 )
         else: # len(columns) = 1
-            Tables = [table.Table(matrix, None, None, transpose_after)]
+            tables = [table.Table(matrix, None, None, transpose_after)]
 
-    for tab in Tables:
-        tab.write(outputfile)
+    if not print_mode and len(tables) > 1:
+        outputfile_base = os.path.splitext(outputfile)[0]
+        outputfile_ext = os.path.splitext(outputfile)[1]
+        outputfiles = ["" for _ in range(len(tables))]
 
+        for i in range(len(tables)):
+            outputfiles[i] = outputfile_base + "-" + str(i) + outputfile_ext
+
+        print("The following files will be written:")
+        if len(tables) > 3:
+            print(outputfiles[0] + ", " + outputfiles[1] + ", ..., " + outputfiles[-1])
+        else:
+            for out in outputfiles:
+                print(out, end=", ")
+            print("")
+
+        ans = ""
+        while ans not in ('y', 'n'):
+            ans = input("Do you want to continue? (y/n): ")
+
+        if ans == 'n':
+            sys.exit()
+
+        for i in range(len(tables)):
+            f = open(outputfiles[i], 'w')
+            f.write(tables[i].write())
+            f.close()
+
+    else: # print_mode == True
+        for tab in tables:
+            print(tab.write())
 
 def slicer(matrix, srow=0, erow=None, scol=0, ecol=None):
-    if erow == None:
+    if erow is None:
         erow = len(matrix)
-    if ecol == None and len(matrix) > 0:
+    if ecol is None and len(matrix) > 0:
         ecol = len(matrix[1])
     return [row[scol:ecol] for row in matrix[srow:erow]]
 
