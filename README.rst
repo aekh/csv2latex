@@ -23,3 +23,32 @@ First, clone the repository, then use the following command in the root folder o
     python setup.py install
 
 For updates, simply pull the latest version.
+
+Example
+-------
+Let file.csv denote the following file::
+
+    "a","b","c","d","e","f","g","h"
+    "1","2","3","4","5","6","7","8"
+    "A","B","C","D","E","F","G","H"
+    
+By running::
+    
+    csv2latex -i file.csv -p --transpose-after -r3,6
+    
+the following three tables is obtained::
+
+    a & 1 & A \\
+    b & 2 & B \\
+    c & 3 & C \\
+
+    %%%
+
+    d & 4 & D \\
+    e & 5 & E \\
+    f & 6 & F \\
+
+    %%%
+    
+    g & 7 & G \\
+    h & 8 & H \\
