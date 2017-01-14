@@ -6,7 +6,7 @@ import os
 
 from . import help, table
 
-VERSION = "0.1.0"
+VERSION = "1.0.0"
 
 def main():
     argv = sys.argv[1:]
