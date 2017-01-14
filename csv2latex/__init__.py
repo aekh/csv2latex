@@ -4,6 +4,7 @@ import csv
 
 from . import help, table
 
+VERSION = "0.1.0"
 
 def main():
     argv = sys.argv[1:]
@@ -37,7 +38,8 @@ def main():
         "outfile=",
         "print",
         "rows=",
-        "columns="
+        "columns=",
+        "version"
     ]
 
     try:
@@ -48,11 +50,14 @@ def main():
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt == '-h':
+        if opt in ('-h', '--help'):
             help.help(1)
             sys.exit()
         if opt == '--more-help':
             help.help(2)
+            sys.exit()
+        elif opt in ('--version'):
+            print("Current version of csv2latex is " + VERSION);
             sys.exit()
         elif opt in ("-i", "--infile"):
             inputfile = arg
@@ -89,7 +94,7 @@ def main():
         csvdata = csv.reader(csvfile, delimiter=delimiter, quotechar=quotechar)
         matrix = list(csvdata)
         if transpose_before:
-            matrix = map(list, zip(*matrix))
+            matrix = list(map(list, zip(*matrix)))
 
     Tables = []
 
