@@ -13,7 +13,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='csv2latex',
-    version='0.1.0',
+    version='1.0.0',
     description='A small program for efficiently and painlessly convert csv-files to LaTeX-tables of variable sizes.',
     long_description=long_description,
     url='https://github.com/aekh/csv2latex',
@@ -21,7 +21,7 @@ setup(
     author_email='ekh.alex@gmail.com',
     license='GPLv3',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GPLv3',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
