@@ -20,7 +20,7 @@ Installation for development
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 First, clone the repository, then use the following command in the root folder of this project::
 
-    python setup.py install
+    python setup.py develop
 
 For updates, simply pull the latest version.
 
@@ -36,7 +36,7 @@ By running::
     
     csv2latex -i file.csv -p --transpose-after -r3,6
     
-the following three tables is obtained::
+the following three tables are obtained::
 
     a & 1 & A \\
     b & 2 & B \\
